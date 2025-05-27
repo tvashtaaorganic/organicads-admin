@@ -19,8 +19,12 @@ export async function GET() {
     const international = Number(internationalQuery.rows[0].count);
 
     return NextResponse.json({ domestic, international });
-  } catch (error: any) {
-    console.error("Count Fetch Error:", error.message);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Count Fetch Error:", error.message);
+    } else {
+      console.error("Unknown Count Fetch Error:", error);
+    }
     return NextResponse.json({ error: "Failed to fetch counts" }, { status: 500 });
   }
 }

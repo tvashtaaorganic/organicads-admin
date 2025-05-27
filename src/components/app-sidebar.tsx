@@ -10,7 +10,7 @@ import {
   // PieChart,
   // Settings2,
   GalleryVerticalEnd,
-  Bot,
+  // Bot,
   SquareTerminal,
  
 } from "lucide-react"

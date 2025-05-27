@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import client from '@/db/turso'; // ← using your db connection
+import client from '@/db/turso';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 const SITEMAP_DIR = path.join(process.cwd(), 'public', 'sitemaps-services');
 const MAX_URLS_PER_SITEMAP = 1000;
 
-// ✅ Get slugs from Turso
+interface RowResult {
+  slug: string;
+}
+
 async function getSlugs(): Promise<string[]> {
   try {
     const result = await client.execute('SELECT slug FROM pages');
-    return result.rows.map((row: any) => row.slug);
+    const rows = result.rows as unknown as RowResult[]; // ✅ Safe assertion
+    return rows.map((row) => row.slug);
   } catch (err) {
     console.error('Error fetching slugs from Turso:', err);
     return [];
@@ -40,9 +44,11 @@ ${sitemapSlugs
 
   const fileName = `sitemap-services-${index}.xml`;
   const filePath = path.join(SITEMAP_DIR, fileName);
+
   if (!fs.existsSync(SITEMAP_DIR)) {
     fs.mkdirSync(SITEMAP_DIR, { recursive: true });
   }
+
   fs.writeFileSync(filePath, sitemap, 'utf8');
   return `${BASE_URL}/sitemaps-services/${fileName}`;
 }
