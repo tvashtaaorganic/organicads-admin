@@ -5,7 +5,14 @@ import { Label } from "@/components/ui/label";
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { Pencil, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
@@ -26,7 +33,11 @@ type Page = {
   date: string;
 };
 
-const fetchPages = async (page = 0, searchQuery = "", descpost = "domestic") => {
+const fetchPages = async (
+  page = 0,
+  searchQuery = "",
+  descpost = "domestic"
+): Promise<{ items: Page[]; totalPages: number }> => {
   try {
     const url = new URL("/api/pages", window.location.origin);
     url.searchParams.append("page", String(page));
@@ -45,7 +56,6 @@ const fetchPages = async (page = 0, searchQuery = "", descpost = "domestic") => 
 
 export default function DomesticPage() {
   const [data, setData] = useState<Page[]>([]);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [pageIndex, setPageIndex] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -86,18 +96,17 @@ export default function DomesticPage() {
   useEffect(() => {
     const loadData = async () => {
       const result = await fetchPages(pageIndex, searchQuery, "domestic");
-      // const sortedItems = (result.items || []).sort(
-      //   (a: Page, b: Page) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      // );
-      const sortedItems = (result.items || []).sort((a: Page, b: Page) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
+      // Sort descending by date
+      const sortedItems = (result.items || []).sort(
+        (a: Page, b: Page) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
       setData(sortedItems);
       setTotalPages(result.totalPages || 0);
     };
     loadData();
   }, [pageIndex, searchQuery]);
 
-  // Properly type `page` param here
+  // Edit handler
   const handleEdit = (page: Page) => {
     setEditingPage(page);
     setFormData({
@@ -116,6 +125,7 @@ export default function DomesticPage() {
     });
   };
 
+  // Submit update
   const handleSubmitEdit = async () => {
     if (!editingPage) return; // safeguard
 
@@ -151,7 +161,7 @@ export default function DomesticPage() {
     }
   };
 
-  // Properly type id parameter as string here
+  // Delete handler
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm("Are you sure you want to delete this page?");
     if (!confirmed) return;
@@ -184,6 +194,7 @@ export default function DomesticPage() {
     }
   };
 
+  // Columns for react-table
   const columns = [
     { accessorKey: "name", header: "Name" },
     {
@@ -263,13 +274,15 @@ export default function DomesticPage() {
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center">
+                <TableCell colSpan={columns.length} className="text-center p-4">
                   No results found.
                 </TableCell>
               </TableRow>
@@ -279,205 +292,156 @@ export default function DomesticPage() {
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex justify-between items-center mt-4 max-w-max gap-2 flex-wrap">
-        <Button variant="outline" size="sm" onClick={() => setPageIndex(0)} disabled={pageIndex === 0}>
-          First
-        </Button>
+      <div className="flex items-center gap-2 mb-4">
         <Button
           variant="outline"
-          size="sm"
-          onClick={() => setPageIndex((prev) => Math.max(prev - 1, 0))}
+          onClick={() => setPageIndex((old) => Math.max(old - 1, 0))}
           disabled={pageIndex === 0}
         >
           Previous
         </Button>
-        <div className="flex space-x-1 overflow-x-auto items-center">
-          {(() => {
-            const pages = [];
-            const showRange = 2; // show 2 pages before and after current
-            const start = Math.max(0, pageIndex - showRange);
-            const end = Math.min(totalPages - 1, pageIndex + showRange);
-            for (let i = start; i <= end; i++) {
-              pages.push(
-                <Button
-                  key={i}
-                  variant={pageIndex === i ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPageIndex(i)}
-                >
-                  {i + 1}
-                </Button>
-              );
-            }
-            return pages;
-          })()}
-        </div>
+        <span>
+          Page <strong>{pageIndex + 1}</strong> of <strong>{totalPages}</strong>
+        </span>
         <Button
           variant="outline"
-          size="sm"
-          onClick={() => setPageIndex((prev) => Math.min(prev + 1, totalPages - 1))}
-          disabled={pageIndex >= totalPages - 1}
+          onClick={() => setPageIndex((old) => (old + 1 < totalPages ? old + 1 : old))}
+          disabled={pageIndex + 1 >= totalPages}
         >
           Next
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setPageIndex(totalPages - 1)}
-          disabled={pageIndex >= totalPages - 1}
-        >
-          Last
         </Button>
       </div>
 
       {/* Edit Modal */}
-      {editingPage && (
-        <dialog open className="fixed inset-0 bg-black/40 flex justify-center items-center">
-          <form
-            className="bg-white p-6 rounded-lg w-[600px] max-w-full overflow-auto max-h-[90vh]"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSubmitEdit();
-            }}
-          >
-            <h2 className="text-lg font-bold mb-4">Edit Page</h2>
+      <dialog
+        id="editModal"
+        className="modal"
+        open={!!editingPage}
+        onClick={(e) => {
+          // Close modal if clicking outside the form
+          if (e.target === e.currentTarget) setEditingPage(null);
+        }}
+        aria-modal="true"
+        role="dialog"
+      >
+        <form
+          method="dialog"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmitEdit();
+          }}
+          className="modal-box max-w-xl w-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="font-bold text-lg mb-4">Edit Page</h3>
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                required
-              />
-            </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Label>Name</Label>
+            <Input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="locationin">Location</Label>
-              <Input
-                id="locationin"
-                value={formData.locationin}
-                onChange={(e) => setFormData((prev) => ({ ...prev, locationin: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>Location</Label>
+            <Input
+              type="text"
+              value={formData.locationin}
+              onChange={(e) => setFormData({ ...formData, locationin: e.target.value })}
+              required
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="cityin">City</Label>
-              <Input
-                id="cityin"
-                value={formData.cityin}
-                onChange={(e) => setFormData((prev) => ({ ...prev, cityin: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>City</Label>
+            <Input
+              type="text"
+              value={formData.cityin}
+              onChange={(e) => setFormData({ ...formData, cityin: e.target.value })}
+              required
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="countryin">Country</Label>
-              <Input
-                id="countryin"
-                value={formData.countryin}
-                onChange={(e) => setFormData((prev) => ({ ...prev, countryin: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>Country</Label>
+            <Input
+              type="text"
+              value={formData.countryin}
+              onChange={(e) => setFormData({ ...formData, countryin: e.target.value })}
+              required
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="descpost">Description Post</Label>
-              <Input
-                id="descpost"
-                value={formData.descpost}
-                onChange={(e) => setFormData((prev) => ({ ...prev, descpost: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>Category</Label>
+            <Input
+              type="text"
+              value={formData.cat}
+              onChange={(e) => setFormData({ ...formData, cat: e.target.value })}
+              required
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="cat">Category</Label>
-              <Input
-                id="cat"
-                value={formData.cat}
-                onChange={(e) => setFormData((prev) => ({ ...prev, cat: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>Title Tag</Label>
+            <Input
+              type="text"
+              value={formData.titletag}
+              onChange={(e) => setFormData({ ...formData, titletag: e.target.value })}
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="titletag">Title Tag</Label>
-              <Input
-                id="titletag"
-                value={formData.titletag}
-                onChange={(e) => setFormData((prev) => ({ ...prev, titletag: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>Description Tag</Label>
+            <Input
+              type="text"
+              value={formData.descriptiontag}
+              onChange={(e) => setFormData({ ...formData, descriptiontag: e.target.value })}
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="descriptiontag">Description Tag</Label>
-              <Input
-                id="descriptiontag"
-                value={formData.descriptiontag}
-                onChange={(e) => setFormData((prev) => ({ ...prev, descriptiontag: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>Keywords Tag</Label>
+            <Input
+              type="text"
+              value={formData.keywordstag}
+              onChange={(e) => setFormData({ ...formData, keywordstag: e.target.value })}
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="keywordstag">Keywords Tag</Label>
-              <Input
-                id="keywordstag"
-                value={formData.keywordstag}
-                onChange={(e) => setFormData((prev) => ({ ...prev, keywordstag: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>Slug</Label>
+            <Input
+              type="text"
+              value={formData.slug}
+              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+              required
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="slug">Slug</Label>
-              <Input
-                id="slug"
-                value={formData.slug}
-                onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>Service Name</Label>
+            <Input
+              type="text"
+              value={formData.servicename}
+              onChange={(e) => setFormData({ ...formData, servicename: e.target.value })}
+              required
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="servicename">Service Name</Label>
-              <Input
-                id="servicename"
-                value={formData.servicename}
-                onChange={(e) => setFormData((prev) => ({ ...prev, servicename: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>Description Post</Label>
+            <Input
+              type="text"
+              value={formData.descpost}
+              onChange={(e) => setFormData({ ...formData, descpost: e.target.value })}
+              required
+            />
 
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="date">Date</Label>
-              <Input
-                type="datetime-local"
-                id="date"
-                value={formData.date}
-                onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
-                required
-              />
-            </div>
+            <Label>Date</Label>
+            <Input
+              type="datetime-local"
+              value={formData.date ? new Date(formData.date).toISOString().slice(0, 16) : ""}
+              onChange={(e) => setFormData({ ...formData, date: new Date(e.target.value).toISOString() })}
+              required
+            />
+          </div>
 
-            <div className="flex justify-end gap-2">
-              <Button type="submit" variant="default">
-                Save
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditingPage(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </dialog>
-      )}
+          <div className="modal-action mt-4 flex justify-end gap-2">
+            <Button type="submit">Save</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditingPage(null)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </dialog>
 
       <Toaster />
     </div>
