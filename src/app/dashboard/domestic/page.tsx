@@ -196,7 +196,7 @@ export default function DomesticPage() {
       toast({
         title: "Deleted",
         description: `Page with ID ${id} deleted successfully.`,
-        variant: "success",
+        variant: "default",
       });
 
       setData((prev) => prev.filter((page) => page.id !== id));
