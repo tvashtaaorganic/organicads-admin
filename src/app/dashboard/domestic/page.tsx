@@ -337,135 +337,150 @@ export default function DomesticPage() {
       </div>
 
       {/* Edit Modal */}
-      <dialog
-        id="editModal"
-        className="modal"
-        open={!!editingPage}
-        onClick={(e) => {
-          // Close modal if clicking outside the form
-          if (e.target === e.currentTarget) setEditingPage(null);
-        }}
-        aria-modal="true"
-        role="dialog"
-      >
-        <form
-          method="dialog"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmitEdit();
-          }}
-          className="modal-box max-w-xl w-full"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <h3 className="font-bold text-lg mb-4">Edit Page</h3>
+ {editingPage && (
+  <div
+    id="editModal"
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    aria-modal="true"
+    role="dialog"
+    onClick={(e) => {
+      // Close modal if clicking outside the form (backdrop)
+      if (e.target === e.currentTarget) setEditingPage(null);
+    }}
+  >
+    <form
+      method="dialog"
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmitEdit();
+      }}
+      className="bg-white modal-box max-w-xl w-full rounded-2xl p-6"
+      onClick={(e) => e.stopPropagation()} // prevent modal close on form click
+    >
+      <h3 className="font-bold text-lg mb-4">Edit Page</h3>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Label>Name</Label>
-            <Input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
+      <div className="grid grid-cols-2 gap-2">
+        <Label>Name</Label>
+        <Input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+        />
 
-            <Label>Location</Label>
-            <Input
-              type="text"
-              value={formData.locationin}
-              onChange={(e) => setFormData({ ...formData, locationin: e.target.value })}
-              required
-            />
+        <Label>Location</Label>
+        <Input
+          type="text"
+          value={formData.locationin}
+          onChange={(e) =>
+            setFormData({ ...formData, locationin: e.target.value })
+          }
+          required
+        />
 
-            <Label>City</Label>
-            <Input
-              type="text"
-              value={formData.cityin}
-              onChange={(e) => setFormData({ ...formData, cityin: e.target.value })}
-              required
-            />
+        <Label>City</Label>
+        <Input
+          type="text"
+          value={formData.cityin}
+          onChange={(e) => setFormData({ ...formData, cityin: e.target.value })}
+          required
+        />
 
-            <Label>Country</Label>
-            <Input
-              type="text"
-              value={formData.countryin}
-              onChange={(e) => setFormData({ ...formData, countryin: e.target.value })}
-              required
-            />
+        <Label>Country</Label>
+        <Input
+          type="text"
+          value={formData.countryin}
+          onChange={(e) =>
+            setFormData({ ...formData, countryin: e.target.value })
+          }
+          required
+        />
 
-            <Label>Category</Label>
-            <Input
-              type="text"
-              value={formData.cat}
-              onChange={(e) => setFormData({ ...formData, cat: e.target.value })}
-              required
-            />
+        <Label>Category</Label>
+        <Input
+          type="text"
+          value={formData.cat}
+          onChange={(e) => setFormData({ ...formData, cat: e.target.value })}
+          required
+        />
 
-            <Label>Title Tag</Label>
-            <Input
-              type="text"
-              value={formData.titletag}
-              onChange={(e) => setFormData({ ...formData, titletag: e.target.value })}
-            />
+        <Label>Title Tag</Label>
+        <Input
+          type="text"
+          value={formData.titletag}
+          onChange={(e) =>
+            setFormData({ ...formData, titletag: e.target.value })
+          }
+        />
 
-            <Label>Description Tag</Label>
-            <Input
-              type="text"
-              value={formData.descriptiontag}
-              onChange={(e) => setFormData({ ...formData, descriptiontag: e.target.value })}
-            />
+        <Label>Description Tag</Label>
+        <Input
+          type="text"
+          value={formData.descriptiontag}
+          onChange={(e) =>
+            setFormData({ ...formData, descriptiontag: e.target.value })
+          }
+        />
 
-            <Label>Keywords Tag</Label>
-            <Input
-              type="text"
-              value={formData.keywordstag}
-              onChange={(e) => setFormData({ ...formData, keywordstag: e.target.value })}
-            />
+        <Label>Keywords Tag</Label>
+        <Input
+          type="text"
+          value={formData.keywordstag}
+          onChange={(e) =>
+            setFormData({ ...formData, keywordstag: e.target.value })
+          }
+        />
 
-            <Label>Slug</Label>
-            <Input
-              type="text"
-              value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              required
-            />
+        <Label>Slug</Label>
+        <Input
+          type="text"
+          value={formData.slug}
+          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+          required
+        />
 
-            <Label>Service Name</Label>
-            <Input
-              type="text"
-              value={formData.servicename}
-              onChange={(e) => setFormData({ ...formData, servicename: e.target.value })}
-              required
-            />
+        <Label>Service Name</Label>
+        <Input
+          type="text"
+          value={formData.servicename}
+          onChange={(e) =>
+            setFormData({ ...formData, servicename: e.target.value })
+          }
+          required
+        />
 
-            <Label>Description Post</Label>
-            <Input
-              type="text"
-              value={formData.descpost}
-              onChange={(e) => setFormData({ ...formData, descpost: e.target.value })}
-              required
-            />
+        <Label>Description Post</Label>
+        <Input
+          type="text"
+          value={formData.descpost}
+          onChange={(e) =>
+            setFormData({ ...formData, descpost: e.target.value })
+          }
+          required
+        />
 
-            <Label>Date</Label>
-            <Input
-              type="datetime-local"
-              value={formData.date ? new Date(formData.date).toISOString().slice(0, 16) : ""}
-              onChange={(e) => setFormData({ ...formData, date: new Date(e.target.value).toISOString() })}
-              required
-            />
-          </div>
+        <Label>Date</Label>
+        <Input
+          type="datetime-local"
+          value={
+            formData.date ? new Date(formData.date).toISOString().slice(0, 16) : ""
+          }
+          onChange={(e) =>
+            setFormData({ ...formData, date: new Date(e.target.value).toISOString() })
+          }
+          required
+        />
+      </div>
 
-          <div className="modal-action mt-4 flex justify-end gap-2">
-            <Button type="submit">Save</Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setEditingPage(null)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </dialog>
+      <div className="modal-action mt-4 flex justify-end gap-2">
+        <Button type="submit">Save</Button>
+        <Button type="button" variant="outline" onClick={() => setEditingPage(null)}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  </div>
+)}
 
       <Toaster />
     </div>
