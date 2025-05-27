@@ -152,13 +152,28 @@ export default function DomesticPage() {
       // Refresh data after update
       const refreshed = await fetchPages(pageIndex, searchQuery, "domestic");
       setData(refreshed.items || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+     } 
+    // catch (error: any) {
+    //   toast({
+    //     title: "Error",
+    //     description: error.message,
+    //     variant: "destructive",
+    //   });
+    // }
+    catch (error: unknown) {
+  let message = "An unknown error occurred";
+
+  if (error instanceof Error) {
+    message = error.message;
+  }
+
+  toast({
+    title: "Error",
+    description: message,
+    variant: "destructive",
+  });
+}
+
   };
 
   // Delete handler
@@ -185,13 +200,20 @@ export default function DomesticPage() {
       });
 
       setData((prev) => prev.filter((page) => page.id !== id));
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    } 
+   catch (error: unknown) {
+  let message = "An unknown error occurred";
+
+  if (error instanceof Error) {
+    message = error.message;
+  }
+
+  toast({
+    title: "Error",
+    description: message,
+    variant: "destructive",
+  });
+}
   };
 
   // Columns for react-table
