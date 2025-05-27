@@ -40,7 +40,8 @@ const fetchPages = async (
 ): Promise<{ items: Page[]; totalPages: number }> => {
   try {
     const url = new URL("/api/pages", window.location.origin);
-    url.searchParams.append("page", String(page));
+ //  url.searchParams.append("page", String(page));
+    url.searchParams.append("page", page.toString());
     url.searchParams.append("search", searchQuery);
     url.searchParams.append("descpost", descpost);
 
