@@ -86,9 +86,11 @@ export default function DomesticPage() {
   useEffect(() => {
     const loadData = async () => {
       const result = await fetchPages(pageIndex, searchQuery, "domestic");
-      const sortedItems = (result.items || []).sort(
-        (a: Page, b: Page) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
+      // const sortedItems = (result.items || []).sort(
+      //   (a: Page, b: Page) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      // );
+      const sortedItems = (result.items || []).sort((a: Page, b: Page) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
       setData(sortedItems);
       setTotalPages(result.totalPages || 0);
     };
