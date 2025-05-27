@@ -52,7 +52,8 @@ export default function DomesticPage() {
  const { toast } = useToast();
 
 
-const formatDate = (isoString) => {
+const formatDate = (isoString: string) => {
+
   const date = new Date(isoString);
   const day = date.getDate();
   const month = date.getMonth() + 1; // months are 0-indexed
