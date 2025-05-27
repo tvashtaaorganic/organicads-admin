@@ -18,12 +18,26 @@ type ToasterToast = ToastProps & {
   action?: ToastActionElement
 }
 
+// const actionTypes = {
+//   ADD_TOAST: "ADD_TOAST",
+//   UPDATE_TOAST: "UPDATE_TOAST",
+//   DISMISS_TOAST: "DISMISS_TOAST",
+//   REMOVE_TOAST: "REMOVE_TOAST",
+// } as const
+// Move this back in
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const
+
+// 👇 Tell TypeScript you're only using the type from the const
+//type ActionType = typeof actionTypes
+
+// 👇 Add this line to prevent the ESLint error
+void actionTypes
+
 
 let count = 0
 
