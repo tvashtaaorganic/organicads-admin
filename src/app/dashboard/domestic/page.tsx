@@ -10,10 +10,26 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 
+// ✅ Define Type at Top
+type Page = {
+  id: string;
+  name: string;
+  locationin: string;
+  cityin: string;
+  countryin: string;
+  descpost: string;
+  cat: string;
+  titletag: string;
+  descriptiontag: string;
+  keywordstag: string;
+  slug: string;
+  servicename: string;
+  date: string;
+};
+
 const fetchPages = async (page = 0, searchQuery = "", descpost = "domestic") => {
   try {
     const url = new URL("/api/pages", window.location.origin);
-    //url.searchParams.append("page", page);
     url.searchParams.append("page", String(page));
     url.searchParams.append("search", searchQuery);
     url.searchParams.append("descpost", descpost);
@@ -29,12 +45,12 @@ const fetchPages = async (page = 0, searchQuery = "", descpost = "domestic") => 
 };
 
 export default function DomesticPage() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Page[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [pageIndex, setPageIndex] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [editingPage, setEditingPage] = useState(null);
-  const [formData, setFormData] = useState({
+  const [editingPage, setEditingPage] = useState<Page | null>(null);
+  const [formData, setFormData] = useState<Omit<Page, "id">>({
     name: "",
     locationin: "",
     cityin: "",
@@ -49,130 +65,91 @@ export default function DomesticPage() {
     date: "",
   });
 
- const { toast } = useToast();
+  const { toast } = useToast();
 
-
-const formatDate = (isoString: string) => {
-
-  const date = new Date(isoString);
-  const day = date.getDate();
-  const month = date.getMonth() + 1; // months are 0-indexed
-  const year = date.getFullYear();
-
-  let hours = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
-
-  hours = hours % 12;
-  hours = hours ? hours : 12; // 0 should be 12
-
-  return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
-};
-
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+  };
 
   useEffect(() => {
     const loadData = async () => {
       const result = await fetchPages(pageIndex, searchQuery, "domestic");
-      const sortedItems = (result.items || []).sort((a, b) => new Date(b.date) - new Date(a.date));
-setData(sortedItems);
-
+      const sortedItems = (result.items || []).sort(
+        (a: Page, b: Page) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      setData(sortedItems);
       setTotalPages(result.totalPages || 0);
     };
     loadData();
   }, [pageIndex, searchQuery]);
 
-
-  
-const handleEdit = (page) => {
-  setEditingPage(page);
-  setFormData({
-    name: page.name,
-    locationin: page.locationin,
-    cityin: page.cityin,
-    countryin: page.countryin,
-    descpost: page.descpost,
-    cat: page.cat,
-    titletag: page.titletag,
-    descriptiontag: page.descriptiontag,
-    keywordstag: page.keywordstag,
-    slug: page.slug,
-    servicename: page.servicename,
-    date: page.date,
-  });
-};
-
-const handleSubmitEdit = async () => {
-  const updatedData = {
-    id: editingPage.id,
-    ...formData,
+  const handleEdit = (page: Page) => {
+    setEditingPage(page);
+    const { id, ...rest } = page;
+    setFormData(rest);
   };
 
-  try {
-    const res = await fetch("/api/pages/update", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedData),
-    });
-    const responseBody = await res.json();
-    if (!res.ok) throw new Error(responseBody.error || "Failed to update page");
+  const handleSubmitEdit = async () => {
+    if (!editingPage) return;
 
-    toast({
-      title: "Success",
-      description: "Page updated successfully",
-    });
+    const updatedData: Page = { id: editingPage.id, ...formData };
 
-    setEditingPage(null);
-    // Refresh data after update
-    const refreshed = await fetchPages(pageIndex, searchQuery, "domestic");
-    setData(refreshed.items || []);
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: error.message,
-      variant: "destructive",
-    });
-  }
-};
+    try {
+      const res = await fetch("/api/pages/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
+      });
+      const responseBody = await res.json();
+      if (!res.ok) throw new Error(responseBody.error || "Failed to update page");
 
-const handleDelete = async (id) => {
-  const confirmed = window.confirm("Are you sure you want to delete this page?");
-  if (!confirmed) return;  // User clicked Cancel, so stop here
+      toast({ title: "Success", description: "Page updated successfully" });
 
-  try {
-    const res = await fetch("/api/pages/delete", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.error || "Failed to delete page");
+      setEditingPage(null);
+      const refreshed = await fetchPages(pageIndex, searchQuery, "domestic");
+      setData(refreshed.items || []);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
+  };
 
-    toast({
-      title: "Deleted",
-      description: `Page with ID ${id} deleted successfully.`,
-      variant: "success",
-    });
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm("Are you sure you want to delete this page?");
+    if (!confirmed) return;
 
-    setData((prev) => prev.filter((page) => page.id !== id));
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: error.message,
-      variant: "destructive",
-    });
-  }
-};
+    try {
+      const res = await fetch("/api/pages/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
 
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to delete page");
+      }
+
+      toast({ title: "Deleted", description: `Page deleted successfully.`, variant: "success" });
+      setData((prev) => prev.filter((page) => page.id !== id));
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
 
   const columns = [
     { accessorKey: "name", header: "Name" },
     {
       accessorKey: "slug",
       header: "Slug",
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <a
           href={`http://localhost:3000/services/${row.original.slug}`}
           target="_blank"
@@ -186,13 +163,15 @@ const handleDelete = async (id) => {
     { accessorKey: "locationin", header: "Location" },
     { accessorKey: "cityin", header: "City" },
     { accessorKey: "countryin", header: "Country" },
-    { accessorKey: "date", 
-  header: "Date", 
-  cell: ({ row }) => formatDate(row.original.date)  },
+    {
+      accessorKey: "date",
+      header: "Date",
+      cell: ({ row }: any) => formatDate(row.original.date),
+    },
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <div className="flex gap-2">
           <Button variant="outline" size="icon" onClick={() => handleEdit(row.original)}>
             <Pencil className="h-4 w-4" />
@@ -215,7 +194,6 @@ const handleDelete = async (id) => {
     <div className="flex flex-col w-full p-4">
       <h1 className="text-xl font-bold mb-4">Domestic Pages</h1>
 
-      {/* Search Box */}
       <div className="flex justify-between mb-4">
         <Input
           placeholder="Search by name or slug..."
@@ -225,14 +203,15 @@ const handleDelete = async (id) => {
         />
       </div>
 
-      {/* Table */}
-      <div className="rounded-md border flex flex-col w-full gap-2 mr-2 mb-4 max-w-max">
-        <Table className="flex-col w-full">
+      <div className="rounded-md border w-full overflow-auto mb-4">
+        <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
+                  <TableHead key={header.id}>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
                 ))}
               </TableRow>
             ))}
@@ -242,7 +221,9 @@ const handleDelete = async (id) => {
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))
@@ -257,64 +238,28 @@ const handleDelete = async (id) => {
         </Table>
       </div>
 
-    
- {/* Pagination Controls */}
-<div className="flex justify-between items-center mt-4 max-w-max gap-2 flex-wrap">
-  <Button variant="outline" size="sm" onClick={() => setPageIndex(0)} disabled={pageIndex === 0}>
-    First
-  </Button>
-  <Button variant="outline" size="sm" onClick={() => setPageIndex((prev) => Math.max(prev - 1, 0))} disabled={pageIndex === 0}>
-    Previous
-  </Button>
-  <div className="flex space-x-1 overflow-x-auto items-center">
-    {(() => {
-      const pages = [];
-      const showRange = 2; // how many pages to show around current
-      const start = Math.max(0, pageIndex - showRange);
-      const end = Math.min(totalPages - 1, pageIndex + showRange);
-
-      if (start > 0) {
-        pages.push(
-          <Button key={0} variant={pageIndex === 0 ? "default" : "outline"} size="sm" onClick={() => setPageIndex(0)}>
-            1
-          </Button>
-        );
-        if (start > 1) {
-          pages.push(<span key="start-ellipsis" className="px-2">...</span>);
-        }
-      }
-
-      for (let i = start; i <= end; i++) {
-        pages.push(
-          <Button key={i} variant={pageIndex === i ? "default" : "outline"} size="sm" onClick={() => setPageIndex(i)}>
+      {/* Pagination Controls */}
+      <div className="flex gap-2 items-center flex-wrap">
+        <Button size="sm" onClick={() => setPageIndex(0)} disabled={pageIndex === 0}>
+          First
+        </Button>
+        <Button size="sm" onClick={() => setPageIndex((p) => Math.max(p - 1, 0))} disabled={pageIndex === 0}>
+          Previous
+        </Button>
+        {Array.from({ length: totalPages }, (_, i) => (
+          <Button key={i} size="sm" variant={pageIndex === i ? "default" : "outline"} onClick={() => setPageIndex(i)}>
             {i + 1}
           </Button>
-        );
-      }
+        ))}
+        <Button size="sm" onClick={() => setPageIndex((p) => Math.min(p + 1, totalPages - 1))} disabled={pageIndex === totalPages - 1}>
+          Next
+        </Button>
+        <Button size="sm" onClick={() => setPageIndex(totalPages - 1)} disabled={pageIndex === totalPages - 1}>
+          Last
+        </Button>
+      </div>
 
-      if (end < totalPages - 1) {
-        if (end < totalPages - 2) {
-          pages.push(<span key="end-ellipsis" className="px-2">...</span>);
-        }
-        pages.push(
-          <Button key={totalPages - 1} variant={pageIndex === totalPages - 1 ? "default" : "outline"} size="sm" onClick={() => setPageIndex(totalPages - 1)}>
-            {totalPages}
-          </Button>
-        );
-      }
-
-      return pages;
-    })()}
-  </div>
-  <Button variant="outline" size="sm" onClick={() => setPageIndex((prev) => Math.min(prev + 1, totalPages - 1))} disabled={pageIndex === totalPages - 1}>
-    Next
-  </Button>
-  <Button variant="outline" size="sm" onClick={() => setPageIndex(totalPages - 1)} disabled={pageIndex === totalPages - 1}>
-    Last
-  </Button>
-</div>
-
-<Toaster />
+      <Toaster />
 
       {/* Edit Modal */}
       {editingPage && (
@@ -323,25 +268,12 @@ const handleDelete = async (id) => {
             <h2 className="text-lg font-semibold mb-4">Edit Page</h2>
 
             <div className="grid grid-cols-1 gap-4 max-h-[75vh] overflow-y-auto">
-              {[
-                { label: "Name", key: "name" },
-                { label: "Location", key: "locationin" },
-                { label: "City", key: "cityin" },
-                { label: "Country", key: "countryin" },
-                { label: "Desc Post", key: "descpost" },
-                { label: "Category", key: "cat" },
-                { label: "Title Tag", key: "titletag" },
-                { label: "Description Tag", key: "descriptiontag" },
-                { label: "Keywords Tag", key: "keywordstag" },
-                { label: "Slug", key: "slug" },
-                { label: "Service Name", key: "servicename" },
-                { label: "Date", key: "date" },
-              ].map(({ label, key }) => (
+              {(Object.keys(formData) as (keyof Page)[]).map((key) => (
                 <div key={key}>
-                  <Label htmlFor={key}>{label}</Label>
+                  <Label htmlFor={key}>{key}</Label>
                   <Input
                     id={key}
-                    value={formData[key] || ""}
+                    value={formData[key] ?? ""}
                     onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
                   />
                 </div>
