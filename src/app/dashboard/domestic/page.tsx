@@ -13,7 +13,8 @@ import { Toaster } from "@/components/ui/toaster";
 const fetchPages = async (page = 0, searchQuery = "", descpost = "domestic") => {
   try {
     const url = new URL("/api/pages", window.location.origin);
-    url.searchParams.append("page", page);
+    //url.searchParams.append("page", page);
+    url.searchParams.append("page", String(page));
     url.searchParams.append("search", searchQuery);
     url.searchParams.append("descpost", descpost);
 
