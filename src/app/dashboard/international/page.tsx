@@ -226,7 +226,7 @@ export default function DomesticPage() {
       header: "Slug",
       cell: ({ row }: { row: { original: Page } }) => (
         <a
-          href={`http://localhost:3000/services/${row.original.slug}`}
+          href={`https://organicads.in/${row.original.slug}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-600 underline"
